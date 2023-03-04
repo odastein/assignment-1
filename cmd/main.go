@@ -14,7 +14,7 @@ func main() {
 		log.Println("$PORT has not been set. Default port is: " + port)
 	}
 
-	http.HandleFunc("/", handlers.UniInfoHandler)
+	http.HandleFunc(handlers.UniInfoPath, handlers.UniInfoHandler)
 	log.Println("Running on port: " + port)
 	log.Fatal(http.ListenAndServe(": "+port, nil))
 }
