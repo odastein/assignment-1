@@ -17,3 +17,13 @@ type University struct {
 	Domains       []string `json:"domains"`
 	Country       string   `json:"country"`
 }
+type Country struct {
+	Name struct {
+		Common string `json:"common"`
+	} `json:"name"`
+	Maps struct {
+		OpenStreetMaps string `json:"openStreetMaps"`
+	} `json:"maps"`
+	Languages map[string]string `json:"languages"`
+	Borders   []string          `json:"borders"`
+}
