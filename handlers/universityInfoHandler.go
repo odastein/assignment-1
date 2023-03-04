@@ -3,14 +3,15 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 )
 
-// UniInfoHandler Takes in a request, and sends a respond based on the request.
+// UniInfoHandler Takes in a request, and sends a response based on the request.
 // The request is expected to be GET.
 func UniInfoHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		getRequestHandler(w)
+		getRequestHandler(w, r)
 		http.Error(w, "Everything is ok", http.StatusOK)
 	default:
 		http.Error(w, "REST Method '"+r.Method+"' not supported. Currently only '"+http.MethodGet+
@@ -20,9 +21,9 @@ func UniInfoHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // getRequestHandler bla blabla
-func getRequestHandler(w http.ResponseWriter) {
+func getRequestHandler(w http.ResponseWriter, r *http.Request) {
 
-	universityInput := getUniversities(w)
+	universityInput := getUniversities(w, r)
 	/*
 		uniInfo := UniInfo{
 			Name:      "NTNU",
@@ -33,20 +34,41 @@ func getRequestHandler(w http.ResponseWriter) {
 			Map:       "https://openstreetmap.org/relation/2978650"}
 	*/
 
+	var listLength int = len(universityInput)
+	uniInfoOutput := make([]UniInfo, listLength)
+	for i := 0; i < listLength; i++ {
+		uniInfoOutput[i].Name = universityInput[i].Name
+		uniInfoOutput[i].Country = universityInput[i].Country
+		uniInfoOutput[i].Webpages = universityInput[i].WebPages
+		uniInfoOutput[i].Isocode = universityInput[i].AlphaTwoCode
+	}
+
 	w.Header().Add("content-type", "application/json")
 
 	encoder := json.NewEncoder(w)
 
-	err := encoder.Encode(universityInput)
+	err := encoder.Encode(uniInfoOutput)
 	if err != nil {
 		http.Error(w, "Error during encoding: "+err.Error(), http.StatusInternalServerError)
 	}
 }
 
-func getUniversities(w http.ResponseWriter) []University {
+func getUniversities(w http.ResponseWriter, r *http.Request) []University {
+	urlParts := strings.Split(r.URL.Path, "/")
+
+	// check if the user has added a search word
+	if len(urlParts) > 5 {
+		http.Error(w, "Too many search words!", http.StatusBadRequest)
+		return nil
+	}
+	if len(urlParts) <= 5 && urlParts[4] == "" {
+		http.Error(w, "Please enter a search word!", http.StatusBadRequest)
+		return nil
+	}
+
 	// create new request
 	request, err1 := http.NewRequest(http.MethodGet,
-		"http://universities.hipolabs.com/search?name=norwegian", nil)
+		UniversityURL+SearchURL+urlParts[4], nil)
 
 	if err1 != nil {
 		http.Error(w, "Error when creating request to dependency", http.StatusInternalServerError)
@@ -55,7 +77,6 @@ func getUniversities(w http.ResponseWriter) []University {
 	request.Header.Add("Content-Type", "application/json")
 
 	// instantiate client
-
 	client := &http.Client{}
 	defer client.CloseIdleConnections()
 
