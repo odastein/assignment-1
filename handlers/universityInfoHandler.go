@@ -58,7 +58,7 @@ func getUniversities(w http.ResponseWriter, universityName string) []University 
 
 	// create new request
 	request, err1 := http.NewRequest(http.MethodGet,
-		UniversityURL+SearchURL+
+		UniversityURL+SearchNameURL+
 			strings.ReplaceAll(universityName, " ", "%20"), nil)
 
 	if err1 != nil {
