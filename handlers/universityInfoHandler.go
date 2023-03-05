@@ -22,22 +22,16 @@ func UniInfoHandler(w http.ResponseWriter, r *http.Request) {
 
 // getRequest1Handler bla blabla
 func getRequest1Handler(w http.ResponseWriter, r *http.Request) {
+	urlParts := strings.Split(r.URL.Path, "/")
 
-	universityInput := getUniversities(w, r)
-	/*
-		uniInfo := UniInfo{
-			Name:      "NTNU",
-			Country:   "Norway",
-			Isocode:   "NO",
-			Webpages:  []string{"http://www.ntnu.no/"},
-			Languages: map[string]string{"nno": "Norwegian Nynorsk", "nob": "Norwegian Bokmål", "smi": "Sami"},
-			Map:       "https://openstreetmap.org/relation/2978650"}
-	*/
+	// check if the user has added a search word
+	if len(urlParts) <= 5 && urlParts[4] == "" {
+		http.Error(w, "Please enter a search word!", http.StatusBadRequest)
+	}
+	universityInput := getUniversities(w, urlParts[4])
 
 	var listLength int = len(universityInput)
 	uniInfoOutput := make([]UniInfo, listLength)
-	client := &http.Client{}
-	defer client.CloseIdleConnections()
 	for i := 0; i < listLength; i++ {
 		uniInfoOutput[i].Name = universityInput[i].Name
 		uniInfoOutput[i].Country = universityInput[i].Country
@@ -60,19 +54,12 @@ func getRequest1Handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getUniversities(w http.ResponseWriter, r *http.Request) []University {
-	urlParts := strings.Split(r.URL.Path, "/")
-
-	// check if the user has added a search word
-	if len(urlParts) <= 5 && urlParts[4] == "" {
-		http.Error(w, "Please enter a search word!", http.StatusBadRequest)
-		return nil
-	}
+func getUniversities(w http.ResponseWriter, universityName string) []University {
 
 	// create new request
 	request, err1 := http.NewRequest(http.MethodGet,
 		UniversityURL+SearchURL+
-			strings.ReplaceAll(urlParts[4], " ", "%20"), nil)
+			strings.ReplaceAll(universityName, " ", "%20"), nil)
 
 	if err1 != nil {
 		http.Error(w, "Error when creating request to dependency", http.StatusInternalServerError)
@@ -104,8 +91,8 @@ func getUniversities(w http.ResponseWriter, r *http.Request) []University {
 func getCountry(w http.ResponseWriter, alphacode string) Country {
 	client := &http.Client{}
 	defer client.CloseIdleConnections()
-	response, err := client.Get("https://restcountries.com/v3.1/alpha/" +
-		alphacode + "?fields=name,maps,languages,borders")
+	response, err := client.Get(RestCountriesAlphaPath +
+		alphacode + RestCountriesFieldsPath)
 
 	if err != nil {
 		http.Error(w, "Error in response from service", http.StatusInternalServerError)
