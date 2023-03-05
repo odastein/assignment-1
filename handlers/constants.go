@@ -2,7 +2,7 @@ package handlers
 
 const rootPath = "/unisearcher/v1/"
 const UniInfoPath = rootPath + "uniinfo/"
-const NeighbourUniPath = rootPath + "neighbour/"
+const NeighbourUniPath = rootPath + "neighbourunis/"
 const DiagPath = rootPath + "diag/"
 
 const UniversityURL = "http://universities.hipolabs.com"
