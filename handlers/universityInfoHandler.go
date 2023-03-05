@@ -11,7 +11,7 @@ import (
 func UniInfoHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		getRequestHandler(w, r)
+		getRequest1Handler(w, r)
 		http.Error(w, "Everything is ok", http.StatusOK)
 	default:
 		http.Error(w, "REST Method '"+r.Method+"' not supported. Currently only '"+http.MethodGet+
@@ -20,8 +20,8 @@ func UniInfoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// getRequestHandler bla blabla
-func getRequestHandler(w http.ResponseWriter, r *http.Request) {
+// getRequest1Handler bla blabla
+func getRequest1Handler(w http.ResponseWriter, r *http.Request) {
 
 	universityInput := getUniversities(w, r)
 	/*
@@ -36,11 +36,18 @@ func getRequestHandler(w http.ResponseWriter, r *http.Request) {
 
 	var listLength int = len(universityInput)
 	uniInfoOutput := make([]UniInfo, listLength)
+	client := &http.Client{}
+	defer client.CloseIdleConnections()
 	for i := 0; i < listLength; i++ {
 		uniInfoOutput[i].Name = universityInput[i].Name
 		uniInfoOutput[i].Country = universityInput[i].Country
 		uniInfoOutput[i].Webpages = universityInput[i].WebPages
 		uniInfoOutput[i].Isocode = universityInput[i].AlphaTwoCode
+		alfaCodeLowerCase := strings.ToLower(universityInput[i].AlphaTwoCode)
+		// Todo implement cache
+		country := getCountry(w, alfaCodeLowerCase)
+		uniInfoOutput[i].Languages = country.Languages
+		uniInfoOutput[i].Map = country.Maps.OpenStreetMaps
 	}
 
 	w.Header().Add("content-type", "application/json")
@@ -57,10 +64,6 @@ func getUniversities(w http.ResponseWriter, r *http.Request) []University {
 	urlParts := strings.Split(r.URL.Path, "/")
 
 	// check if the user has added a search word
-	if len(urlParts) > 5 {
-		http.Error(w, "Too many search words!", http.StatusBadRequest)
-		return nil
-	}
 	if len(urlParts) <= 5 && urlParts[4] == "" {
 		http.Error(w, "Please enter a search word!", http.StatusBadRequest)
 		return nil
@@ -68,7 +71,8 @@ func getUniversities(w http.ResponseWriter, r *http.Request) []University {
 
 	// create new request
 	request, err1 := http.NewRequest(http.MethodGet,
-		UniversityURL+SearchURL+urlParts[4], nil)
+		UniversityURL+SearchURL+
+			strings.ReplaceAll(urlParts[4], " ", "%20"), nil)
 
 	if err1 != nil {
 		http.Error(w, "Error when creating request to dependency", http.StatusInternalServerError)
@@ -95,4 +99,25 @@ func getUniversities(w http.ResponseWriter, r *http.Request) []University {
 		http.Error(w, "Error when decoding response body from json to list", http.StatusInternalServerError)
 	}
 	return universities
+}
+
+func getCountry(w http.ResponseWriter, alphacode string) Country {
+	client := &http.Client{}
+	defer client.CloseIdleConnections()
+	response, err := client.Get("https://restcountries.com/v3.1/alpha/" +
+		alphacode + "?fields=name,maps,languages,borders")
+
+	if err != nil {
+		http.Error(w, "Error in response from service", http.StatusInternalServerError)
+	}
+
+	//decoding json
+	decoder := json.NewDecoder(response.Body)
+	var country Country
+	err2 := decoder.Decode(&country)
+	if err2 != nil {
+		http.Error(w, "Error when decoding response body from json to list", http.StatusInternalServerError)
+	}
+
+	return country
 }
