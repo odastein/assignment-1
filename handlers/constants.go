@@ -7,3 +7,5 @@ const DiagPath = rootPath + "diag/"
 
 const UniversityURL = "http://universities.hipolabs.com"
 const SearchURL = "/search?name="
+
+const RestCountriesPath = "https://restcountries.com"
