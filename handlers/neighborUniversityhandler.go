@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strings"
 )
@@ -19,23 +18,41 @@ func NeighbourUnisHandler(w http.ResponseWriter, r *http.Request) {
 
 func getRequest2Handler(w http.ResponseWriter, r *http.Request) {
 	urlParts := strings.Split(r.URL.Path, "/")
-	fmt.Println(urlParts)
-	fmt.Println(len(urlParts))
 
 	// check if the user has added 2-3 search words
 	if len(urlParts) < 6 || urlParts[5] == "" || urlParts[4] == "" {
 		http.Error(w, "Please enter 2 or 3 search words!", http.StatusBadRequest)
 		return
 	}
+	name := urlParts[4]
 
-	country := getCountry(w, name)
+	country := getCountryByName(w, name)
+
+	w.Header().Add("content-type", "application/json")
+	encoder := json.NewEncoder(w)
+	err := encoder.Encode(country)
+	if err != nil {
+		http.Error(w, "Error during encoding: "+err.Error(), http.StatusInternalServerError)
+	}
+
+	var listLength int = len(country.Borders)
+	//uniInfoOutput := make([]UniInfo, listLength)
+	for i := 0; i < listLength; i++ {
+		neighbourCountry := country.Borders[i]
+		neighbourUniversities := getUniversities(w, neighbourCountry)
+		var listLength2 int = len(neighbourCountry)
+		for i := 0; i < listLength2; i++ {
+			var outputUniversities []University
+			outputUniversities = append(outputUniversities, neighbourUniversities...)
+		}
+	}
 }
 
-func getCountryName(w http.ResponseWriter, name string) Country {
+func getCountryByName(w http.ResponseWriter, name string) Country {
 	client := &http.Client{}
 	defer client.CloseIdleConnections()
-	response, err := client.Get("https://restcountries.com/v3.1/alpha/" +
-		name + "?fields=name,maps,languages,borders")
+	response, err := client.Get(RestCountriesNamePath +
+		name + RestCountriesTextPath)
 
 	if err != nil {
 		http.Error(w, "Error in response from service", http.StatusInternalServerError)
@@ -51,7 +68,5 @@ func getCountryName(w http.ResponseWriter, name string) Country {
 
 	return country
 }
-
-//getPartialOrCompleteUniversityName
 
 //getLimit
