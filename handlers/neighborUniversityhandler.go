@@ -8,7 +8,6 @@ import (
 	"strings"
 )
 
-//todo make error-returns everywhere
 //todo write comments for every function
 
 func NeighbourUnisHandler(w http.ResponseWriter, r *http.Request) {
@@ -35,15 +34,15 @@ func getRequest2Handler(w http.ResponseWriter, r *http.Request) {
 	universityName := urlParts[5]
 
 	limitString := r.URL.Query().Get("limit")
-	limit, err := strconv.Atoi(limitString)
-	if err != nil || limit < 0 {
+	limit, err1 := strconv.Atoi(limitString)
+	if err1 != nil || limit < 0 {
 		http.Error(w, "Please enter a positive number", http.StatusBadRequest)
 		return
 	}
 
 	country, err2 := getCountryByName(countryName)
 	if err2 != nil {
-		http.Error(w, err2.Error(), http.StatusInternalServerError)
+		http.Error(w, "There was an error "+err2.Error(), http.StatusFailedDependency)
 		return
 	}
 	var outputInfo []UniInfo
@@ -53,11 +52,11 @@ func getRequest2Handler(w http.ResponseWriter, r *http.Request) {
 		alphaCode := country.Borders[i]
 		borderCountry, err3 := getCountry(alphaCode)
 		if err3 != nil {
-			//todo
+			http.Error(w, "There was an error "+err3.Error(), http.StatusFailedDependency)
 		}
-		borderUniversities, err5 := getUniByCountryAndName(borderCountry.Name.Common, universityName)
-		if err5 != nil {
-			//todo
+		borderUniversities, err4 := getUniByCountryAndName(borderCountry.Name.Common, universityName)
+		if err4 != nil {
+			http.Error(w, "There was an error "+err4.Error(), http.StatusFailedDependency)
 		}
 		var listLength2 = len(borderUniversities)
 		for j := 0; j < limit && j < listLength2; j++ {
@@ -77,10 +76,7 @@ func getRequest2Handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getCountryByName(name string) (Country, error) {
-	client := &http.Client{}
-	defer client.CloseIdleConnections()
-	response, err1 := client.Get(RestCountriesNamePath +
-		name + RestCountriesTextPath)
+	response, err1 := http.Get(RestCountriesNamePath + url.QueryEscape(name) + RestCountriesTextPath)
 
 	if err1 != nil {
 		return Country{}, err1
@@ -103,36 +99,20 @@ func getUniByCountryAndName(country string, universityName string) ([]University
 		country = foundCountry
 	}
 
-	country = url.QueryEscape(country)
-	universityName = url.QueryEscape(universityName)
-
-	// create new request
-	request, err1 := http.NewRequest(http.MethodGet,
-		UniversityURL+SearchNameURL+universityName+SearchCountryURL+country, nil)
+	//issue request
+	response, err1 := http.Get(UniversityURL + SearchNameURL + url.QueryEscape(universityName) +
+		SearchCountryURL + url.QueryEscape(country))
 
 	if err1 != nil {
 		return nil, err1
-	}
-	// give request header
-	request.Header.Add("Content-Type", "application/json")
-
-	// instantiate client
-	client := &http.Client{}
-	defer client.CloseIdleConnections()
-
-	//issue request
-	response, err2 := client.Do(request)
-
-	if err2 != nil {
-		return nil, err2
 	}
 
 	// decode json
 	decoder := json.NewDecoder(response.Body)
 	var universities []University
-	err3 := decoder.Decode(&universities)
-	if err3 != nil {
-		return nil, err3
+	err4 := decoder.Decode(&universities)
+	if err4 != nil {
+		return nil, err4
 	}
 	return universities, nil
 }
