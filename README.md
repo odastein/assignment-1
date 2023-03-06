@@ -46,8 +46,8 @@ This again uses the upTime function.
 #### One request the user can send us this: 
 * http://localhost:8080/unisearcher/v1/uniinfo/uruguay. 
 
-That will 
-return a list of universities with "uruguay" in the name. 
+That will return a list of universities with "uruguay" in 
+the name. 
 
 #### Another example is
 * http://localhost:8080/unisearcher/v1/neighbouruni/turkey/middle/8.
@@ -55,6 +55,11 @@ return a list of universities with "uruguay" in the name.
 This will return the first 8universities in each of Turkeys 
 neighbouring countries, that contains the word "middle". This 
 could be many, since this area is a part of the middle east.
+
+#### The third example is when useing the diagnostics
+* http://localhost:8080/unisearcher/v1/diag
+
+This will give us two status codes, the version, and the time used.
 
 ## Dependencies
 This service is dependent on two different web services, in 
