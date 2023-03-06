@@ -22,7 +22,7 @@ func UniInfoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// getRequest1Handler bla blabla
+// getRequest1Handler gets the input, and makes an output
 func getRequest1Handler(w http.ResponseWriter, r *http.Request) {
 	urlParts := strings.Split(r.URL.Path, "/")
 

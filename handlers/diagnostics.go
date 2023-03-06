@@ -20,7 +20,7 @@ func DiagHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// getRequest3Handler handles the
+// getRequest3Handler gets the input, and makes an output
 func getRequest3Handler(w http.ResponseWriter, r *http.Request) {
 	var universitiesApi int
 	var countriesApi int
