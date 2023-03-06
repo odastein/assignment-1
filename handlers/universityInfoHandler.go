@@ -35,6 +35,7 @@ func getRequest1Handler(w http.ResponseWriter, r *http.Request) {
 	universityInput, err1 := getUniversities(urlParts[4])
 	if err1 != nil {
 		http.Error(w, "There was an error "+err1.Error(), http.StatusFailedDependency)
+		return
 	}
 
 	var listLength int = len(universityInput)
@@ -49,6 +50,7 @@ func getRequest1Handler(w http.ResponseWriter, r *http.Request) {
 		country, err2 := getCountry(alfaCodeLowerCase)
 		if err2 != nil {
 			http.Error(w, "There was an error "+err2.Error(), http.StatusFailedDependency)
+			return
 		}
 		uniInfoOutput[i].Languages = country.Languages
 		uniInfoOutput[i].Map = country.Maps.OpenStreetMaps

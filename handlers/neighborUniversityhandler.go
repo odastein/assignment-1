@@ -53,10 +53,12 @@ func getRequest2Handler(w http.ResponseWriter, r *http.Request) {
 		borderCountry, err3 := getCountry(alphaCode)
 		if err3 != nil {
 			http.Error(w, "There was an error "+err3.Error(), http.StatusFailedDependency)
+			return
 		}
 		borderUniversities, err4 := getUniByCountryAndName(borderCountry.Name.Common, universityName)
 		if err4 != nil {
 			http.Error(w, "There was an error "+err4.Error(), http.StatusFailedDependency)
+			return
 		}
 		var listLength2 = len(borderUniversities)
 		for j := 0; j < limit && j < listLength2; j++ {
