@@ -10,6 +10,8 @@ import (
 
 //todo write comments for every function
 
+// NeighbourUnisHandler Takes in a request, and sends a response based on the request.
+// The request is expected to be GET.
 func NeighbourUnisHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
@@ -77,6 +79,8 @@ func getRequest2Handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// getCountryByName is a getter for the country-struct.
+// Returns the country and an error, one of the will be nil
 func getCountryByName(name string) (Country, error) {
 	response, err1 := http.Get(RestCountriesNamePath + url.QueryEscape(name) + RestCountriesTextPath)
 
@@ -95,6 +99,8 @@ func getCountryByName(name string) (Country, error) {
 	return country[0], nil
 }
 
+// getUniByCountryAndName is a getter for a list of elements of the university-struct.
+// Returns a list and an error, one of them will be nil
 func getUniByCountryAndName(country string, universityName string) ([]University, error) {
 	foundCountry, found := countryNames[country]
 	if found {

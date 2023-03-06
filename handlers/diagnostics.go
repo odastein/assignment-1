@@ -6,12 +6,8 @@ import (
 	"time"
 )
 
-var StartTime time.Time
-
-func upTime() string {
-	return time.Since(StartTime).Round(time.Second).String()
-}
-
+// DiagHandler Takes in a request, and sends a response based on the request.
+// The request is expected to be GET.
 func DiagHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
@@ -24,6 +20,7 @@ func DiagHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// getRequest3Handler handles the
 func getRequest3Handler(w http.ResponseWriter, r *http.Request) {
 	var universitiesApi int
 	var countriesApi int
@@ -53,4 +50,11 @@ func getRequest3Handler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error during encoding: "+err3.Error(), http.StatusInternalServerError)
 		return
 	}
+}
+
+var StartTime time.Time
+
+// upTime returns the timw from starttime to now
+func upTime() string {
+	return time.Since(StartTime).Round(time.Second).String()
 }

@@ -67,6 +67,8 @@ func getRequest1Handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// getUniversities is a getter for a list of elements of the university-struct.
+// Returns a list and an error, one of them will be nil
 func getUniversities(universityName string) ([]University, error) {
 
 	response, err1 := http.Get(UniversityURL + SearchNameURL + url.QueryEscape(universityName))
@@ -85,6 +87,8 @@ func getUniversities(universityName string) ([]University, error) {
 	return universities, nil
 }
 
+// getCountry is a getter for the country-struct.
+// Returns the country and an error, one of them will be nil
 func getCountry(alphaCode string) (Country, error) {
 	response, err1 := http.Get(RestCountriesAlphaPath + alphaCode + RestCountriesFieldsPath)
 
