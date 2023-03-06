@@ -23,6 +23,7 @@ func NeighbourUnisHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// getRequest2Handler gets the input, and makes an output
 func getRequest2Handler(w http.ResponseWriter, r *http.Request) {
 	urlParts := strings.Split(r.URL.Path, "/")
 
@@ -35,21 +36,44 @@ func getRequest2Handler(w http.ResponseWriter, r *http.Request) {
 	countryName := urlParts[4]
 	universityName := urlParts[5]
 
-	limitString := r.URL.Query().Get("limit")
-	limit, err1 := strconv.Atoi(limitString)
-	if err1 != nil || limit < 0 {
-		http.Error(w, "Please enter a positive number", http.StatusBadRequest)
-		return
-	}
-
+	var outputInfo []UniInfo
 	country, err2 := getCountryByName(countryName)
 	if err2 != nil {
 		http.Error(w, "There was an error "+err2.Error(), http.StatusFailedDependency)
 		return
 	}
-	var outputInfo []UniInfo
-
 	var listLength = len(country.Borders)
+
+	limitString := r.URL.Query().Get("limit")
+	limit, err1 := strconv.Atoi(limitString)
+	if err1 != nil {
+
+		for i := 0; i < listLength; i++ {
+			alphaCode := country.Borders[i]
+			borderCountry, err3 := getCountry(alphaCode)
+			if err3 != nil {
+				http.Error(w, "There was an error "+err3.Error(), http.StatusFailedDependency)
+				return
+			}
+			borderUniversities, err4 := getUniByCountryAndName(borderCountry.Name.Common, universityName)
+			if err4 != nil {
+				http.Error(w, "There was an error "+err4.Error(), http.StatusFailedDependency)
+				return
+			}
+			var listLength2 = len(borderUniversities)
+			for j := 0; j < limit && j < listLength2; j++ {
+				outputInfo = append(outputInfo, UniInfo{Name: borderUniversities[j].Name,
+					Country: borderUniversities[j].Country, Isocode: borderUniversities[j].AlphaTwoCode,
+					Map: borderCountry.Maps.OpenStreetMaps, Webpages: borderUniversities[j].WebPages,
+					Languages: borderCountry.Languages})
+			}
+		}
+
+	} else if limit < 0 {
+		http.Error(w, "Please enter a positive number", http.StatusBadRequest)
+		return
+	}
+
 	for i := 0; i < listLength; i++ {
 		alphaCode := country.Borders[i]
 		borderCountry, err3 := getCountry(alphaCode)
@@ -70,6 +94,7 @@ func getRequest2Handler(w http.ResponseWriter, r *http.Request) {
 				Languages: borderCountry.Languages})
 		}
 	}
+
 	w.Header().Add("content-type", "application/json")
 	encoder := json.NewEncoder(w)
 	err5 := encoder.Encode(outputInfo)
