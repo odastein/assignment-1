@@ -2,17 +2,20 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 )
 
+//todo make error-returns everywhere
+//todo write comments for every function
+
 func NeighbourUnisHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		getRequest2Handler(w, r)
+		break
 	default:
 		http.Error(w, "REST method '"+r.Method+"' not supported. Currently only '"+
 			http.MethodGet+"' is supported.", http.StatusNotImplemented)
@@ -28,25 +31,34 @@ func getRequest2Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	name := urlParts[4]
+	countryName := urlParts[4]
+	universityName := urlParts[5]
 
 	limitString := r.URL.Query().Get("limit")
 	limit, err := strconv.Atoi(limitString)
 	if err != nil || limit < 0 {
 		http.Error(w, "Please enter a positive number", http.StatusBadRequest)
+		return
 	}
 
-	country, err2 := getCountryByName(w, name)
+	country, err2 := getCountryByName(countryName)
 	if err2 != nil {
 		http.Error(w, err2.Error(), http.StatusInternalServerError)
+		return
 	}
 	var outputInfo []UniInfo
 
 	var listLength = len(country.Borders)
 	for i := 0; i < listLength; i++ {
 		alphaCode := country.Borders[i]
-		borderCountry := getCountry(w, alphaCode)
-		borderUniversities := getUniversities(w, borderCountry.Name.Common)
+		borderCountry, err3 := getCountry(alphaCode)
+		if err3 != nil {
+			//todo
+		}
+		borderUniversities, err5 := getUniByCountryAndName(borderCountry.Name.Common, universityName)
+		if err5 != nil {
+			//todo
+		}
 		var listLength2 = len(borderUniversities)
 		for j := 0; j < limit && j < listLength2; j++ {
 			outputInfo = append(outputInfo, UniInfo{Name: borderUniversities[j].Name,
@@ -57,34 +69,35 @@ func getRequest2Handler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Add("content-type", "application/json")
 	encoder := json.NewEncoder(w)
-	err3 := encoder.Encode(outputInfo)
-	if err3 != nil {
-		http.Error(w, "Error during encoding: "+err3.Error(), http.StatusInternalServerError)
+	err5 := encoder.Encode(outputInfo)
+	if err5 != nil {
+		http.Error(w, "Error during encoding: "+err5.Error(), http.StatusInternalServerError)
+		return
 	}
 }
 
-func getCountryByName(w http.ResponseWriter, name string) (Country, error) {
+func getCountryByName(name string) (Country, error) {
 	client := &http.Client{}
 	defer client.CloseIdleConnections()
-	response, err := client.Get(RestCountriesNamePath +
+	response, err1 := client.Get(RestCountriesNamePath +
 		name + RestCountriesTextPath)
 
-	if err != nil {
-		return Country{}, fmt.Errorf("error in response from service")
+	if err1 != nil {
+		return Country{}, err1
 	}
 
 	//decoding json
 	decoder := json.NewDecoder(response.Body)
-	var country Country
+	var country []Country
 	err2 := decoder.Decode(&country)
 	if err2 != nil {
-		return country, fmt.Errorf("error when decoding response body from json to list")
+		return Country{}, err2
 	}
 
-	return country, nil
+	return country[0], nil
 }
 
-func getUniByCountryAndName(w http.ResponseWriter, country string, universityName string) []University {
+func getUniByCountryAndName(country string, universityName string) ([]University, error) {
 	foundCountry, found := countryNames[country]
 	if found {
 		country = foundCountry
@@ -98,7 +111,7 @@ func getUniByCountryAndName(w http.ResponseWriter, country string, universityNam
 		UniversityURL+SearchNameURL+universityName+SearchCountryURL+country, nil)
 
 	if err1 != nil {
-		http.Error(w, "Error when creating request to dependency", http.StatusInternalServerError)
+		return nil, err1
 	}
 	// give request header
 	request.Header.Add("Content-Type", "application/json")
@@ -111,7 +124,7 @@ func getUniByCountryAndName(w http.ResponseWriter, country string, universityNam
 	response, err2 := client.Do(request)
 
 	if err2 != nil {
-		http.Error(w, "Error in response from service", http.StatusInternalServerError)
+		return nil, err2
 	}
 
 	// decode json
@@ -119,7 +132,7 @@ func getUniByCountryAndName(w http.ResponseWriter, country string, universityNam
 	var universities []University
 	err3 := decoder.Decode(&universities)
 	if err3 != nil {
-		http.Error(w, "Error when decoding response body from json to list", http.StatusInternalServerError)
+		return nil, err3
 	}
-	return universities
+	return universities, nil
 }
