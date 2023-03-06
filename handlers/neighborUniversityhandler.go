@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -61,7 +62,8 @@ func getRequest2Handler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			var listLength2 = len(borderUniversities)
-			for j := 0; j < limit && j < listLength2; j++ {
+			for j := 0; j < listLength2; j++ {
+				fmt.Println(borderUniversities[j].Name)
 				outputInfo = append(outputInfo, UniInfo{Name: borderUniversities[j].Name,
 					Country: borderUniversities[j].Country, Isocode: borderUniversities[j].AlphaTwoCode,
 					Map: borderCountry.Maps.OpenStreetMaps, Webpages: borderUniversities[j].WebPages,
