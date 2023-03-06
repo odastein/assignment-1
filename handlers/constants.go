@@ -1,6 +1,7 @@
 package handlers
 
-const rootPath = "/unisearcher/v1/"
+const versionPath = "v1"
+const rootPath = "/unisearcher/" + versionPath + "/"
 const UniInfoPath = rootPath + "uniinfo/"
 const NeighbourUniPath = rootPath + "neighbourunis/"
 const DiagPath = rootPath + "diag/"

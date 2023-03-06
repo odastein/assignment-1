@@ -27,3 +27,10 @@ type Country struct {
 	Languages map[string]string `json:"languages"`
 	Borders   []string          `json:"borders"`
 }
+
+type DiagnosticsInfo struct {
+	UniversitiesApi int    `json:"universitiesapi"`
+	CountriesApi    int    `json:"countriesapi"`
+	Version         string `json:"versionPath"`
+	Uptime          string `json:"uptime"`
+}
