@@ -13,7 +13,6 @@ func UniInfoHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		getRequest1Handler(w, r)
-		http.Error(w, "Everything is ok", http.StatusOK)
 		break
 	default:
 		http.Error(w, "REST Method '"+r.Method+"' not supported. Currently only '"+http.MethodGet+

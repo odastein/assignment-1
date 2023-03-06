@@ -54,7 +54,7 @@ func getRequest3Handler(w http.ResponseWriter, r *http.Request) {
 
 var StartTime time.Time
 
-// upTime returns the timw from starttime to now
+// upTime returns the time from starttime to now
 func upTime() string {
 	return time.Since(StartTime).Round(time.Second).String()
 }
